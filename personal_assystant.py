@@ -1,4 +1,4 @@
-лimport csv
+import csv
 
 class Note:
     def __init__(self, id: int, title: str, content: str, timestamp: str):
@@ -61,9 +61,12 @@ class CSVHandler:
         except FileNotFoundError:
             print(f"Файл {file_path} не найден.")
             return []
-    
+
     @staticmethod
     def write_csv(file_path: str, data: list[dict]):
+        if not data:
+            print("Нет данных для записи.")
+            return
         with open(file_path, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=data[0].keys())
             writer.writeheader()
@@ -71,7 +74,19 @@ class CSVHandler:
 
 
 def calculator():
-    pass
+    while True:
+        print("\nКалькулятор:")
+        print('Введите арифметическое выражение или "q" для выхода.')
+        expression = input("Введите выражение: ")
+
+        if expression.lower() == "q":
+            break
+
+        try:
+            result = eval(expression)
+            print(f"Результат: {result}")
+        except Exception as e:
+            print(f"Ошибка: {e}")
 
 
 def menu():
@@ -106,4 +121,3 @@ def menu():
 
 if __name__ == "__main__":
     menu()
-
