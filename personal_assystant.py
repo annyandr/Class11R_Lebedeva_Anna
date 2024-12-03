@@ -43,51 +43,6 @@ class Note:
             elif choice == "6":
                 break
             else:
-import csv
-import json
-from datetime import datetime
-
-
-class Note:
-    def __init__(self, id: int, title: str, content: str, timestamp: str):
-        self.id = id
-        self.title = title
-        self.content = content
-        self.timestamp = timestamp
-
-    @staticmethod
-    def menu():
-        while True:
-            print("Управление заметками:")
-            print("1. Создать заметку")
-            print("2. Просмотреть заметки")
-            print("3. Просмотреть подробности заметки")
-            print("4. Редактировать заметку")
-            print("5. Удалить заметку")
-            print("6. Назад")
-
-            choice = input("Введите номер действия: ")
-
-            if choice == "1":
-                title = input("Введите заголовок заметки: ")
-                content = input("Введите содержимое заметки: ")
-                Note.create_note(title, content)
-            elif choice == "2":
-                Note.list_notes()
-            elif choice == "3":
-                note_id = int(input("Введите ID заметки: "))
-                Note.view_note(note_id)
-            elif choice == "4":
-                note_id = int(input("Введите ID заметки для редактирования: "))
-                new_title = input("Введите новый заголовок: ")
-                new_content = input("Введите новое содержимое: ")
-                Note.edit_note(note_id, new_title, new_content)
-            elif choice == "5":
-                note_id = int(input("Введите ID заметки для удаления: "))
-                Note.delete_note(note_id)
-            elif choice == "6":
-                break
-            else:
                 print("Неверный выбор, попробуйте снова.")
 
     @staticmethod
@@ -234,7 +189,7 @@ class Task:
                 task["title"] = new_title
                 task["description"] = new_description
                 task["priority"] = new_priority
-                task["due_date"] = new_due_date
+               task["due_date"] = new_due_date
         Task.save_tasks(tasks)
 
     @staticmethod
@@ -242,6 +197,155 @@ class Task:
         tasks = Task.load_tasks()
         tasks = [task for task in tasks if task["id"] != task_id]
         Task.save_tasks(tasks)
+
+class Contact:
+    def __init__(self, id: int, name: str, phone: str, email: str):
+        self.id = id
+        self.name = name
+        self.phone = phone
+        self.email = email
+
+    @staticmethod
+    def menu():
+        """Меню для управления контактами"""
+        while True:
+            print("Управление контактами:")
+            print("1. Создать новый контакт")
+            print("2. Просмотреть контакты")
+            print("3. Поиск контакта")
+            print("4. Редактировать контакт")
+            print("5. Удалить контакт")
+            print("6. Импорт контактов из CSV")
+            print("7. Экспорт контактов в CSV")
+            print("8. Назад")
+
+            choice = input("Введите номер действия: ")
+
+            if choice == "1":
+                name = input("Введите имя контакта: ")
+                phone = input("Введите телефон контакта: ")
+                email = input("Введите email контакта: ")
+                Contact.create_contact(name, phone, email)
+            elif choice == "2":
+                Contact.list_contacts()
+            elif choice == "3":
+                query = input("Введите имя или телефон для поиска: ")
+                Contact.search_contact(query)
+            elif choice == "4":
+                contact_id = int(input("Введите ID контакта для редактирования: "))
+                new_name = input("Введите новое имя: ")
+                new_phone = input("Введите новый телефон: ")
+                new_email = input("Введите новый email: ")
+                Contact.edit_contact(contact_id, new_name, new_phone, new_email)
+            elif choice == "5":
+                contact_id = int(input("Введите ID контакта для удаления: "))
+                Contact.delete_contact(contact_id)
+            elif choice == "6":
+                filename = input("Введите имя файла для импорта контактов: ")
+                Contact.import_contacts_from_csv(filename)
+            elif choice == "7":
+                filename = input("Введите имя файла для экспорта контактов: ")
+                Contact.export_contacts_to_csv(filename)
+            elif choice == "8":
+                break
+            else:
+                print("Неверный выбор, попробуйте снова.")
+
+    @staticmethod
+    def load_contacts():
+        """Загружает контакты из файла"""
+        try:
+            with open("contacts.json", "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            return []
+
+    @staticmethod
+    def save_contacts(contacts):
+        """Сохраняет контакты в файл"""
+        with open("contacts.json", "w") as file:
+            json.dump(contacts, file, indent=4)
+
+    @staticmethod
+    def create_contact(name: str, phone: str, email: str):
+        """Создает контакт и добавляет его в список"""
+        contacts = Contact.load_contacts()
+        new_id = len(contacts) + 1
+        contact = Contact(new_id, name, phone, email)
+        contacts.append(contact.__dict__)
+        Contact.save_contacts(contacts)
+
+    @staticmethod
+    def list_contacts():
+        """Выводит список всех контактов"""
+        contacts = Contact.load_contacts()
+        for contact in contacts:
+            print(f'ID: {contact["id"]}, Name: {contact["name"]}, Phone: {contact["phone"]}, Email: {contact["email"]}')
+
+    @staticmethod
+    def search_contact(query: str):
+        """Поиск контакта по имени или номеру телефона"""
+        contacts = Contact.load_contacts()
+        found_contacts = [contact for contact in contacts if query.lower() in contact["name"].lower() or query in contact["phone"]]
+        if found_contacts:
+            for contact in found_contacts:
+                print(f'ID: {contact["id"]}, Name: {contact["name"]}, Phone: {contact["phone"]}, Email: {contact["email"]}')
+        else:
+            print("Контакт не найден.")
+
+    @staticmethod
+    def edit_contact(contact_id: int, new_name: str, new_phone: str, new_email: str):
+        """Редактирование контакта"""
+        contacts = Contact.load_contacts()
+        for contact in contacts:
+            if contact["id"] == contact_id:
+                contact["name"] = new_name
+                contact["phone"] = new_phone
+                contact["email"] = new_email
+        Contact.save_contacts(contacts)
+
+    @staticmethod
+    def delete_contact(contact_id: int):
+        """Удаление контакта по ID"""
+        contacts = Contact.load_contacts()
+        contacts = [contact for contact in contacts if contact["id"] != contact_id]
+        Contact.save_contacts(contacts)
+
+    @staticmethod
+    def import_contacts_from_csv(filename: str):
+        """Импортирует контакты из CSV"""
+        contacts = Contact.load_contacts()
+        try:
+            with open(filename, "r", encoding="utf-8") as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    new_contact = Contact(int(row["id"]), row["name"], row["phone"], row["email"])
+                    contacts.append(new_contact.__dict__)
+            Contact.save_contacts(contacts)
+        except FileNotFoundError:
+            print(f"Файл {filename} не найден.")
+
+    @staticmethod
+    def export_contacts_to_csv(filename: str):
+        """Экспортирует контакты в CSV"""
+        contacts = Contact.load_contacts()
+        with open(filename, "w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=["id", "name", "phone", "email"])
+            writer.writeheader()
+            writer.writerows(contacts)
+
+
+class FinanceRecord:
+    def __init__(self, id: int, amount: float, category: str, date: str, description: str):
+        self.id = id
+        self.amount = amount
+        self.category = category
+        self.date = date
+        self.description = description
+
+    @staticmethod
+    def menu():
+        pass
 
 
 class CSVHandler:
@@ -302,7 +406,7 @@ def menu():
         elif choice == "5":
             calculator()
         elif choice == "6":
-            print("До свидания!")
+            print("Завершил работу.")
             break
         else:
             print("Неверный выбор, попробуйте снова.")
