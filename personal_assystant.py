@@ -1,7 +1,7 @@
-import csv
 import json
+import csv
 from datetime import datetime
-
+import textwrap
 
 class Note:
     def __init__(self, id: int, title: str, content: str, timestamp: str):
@@ -334,7 +334,6 @@ class Contact:
             writer.writeheader()
             writer.writerows(contacts)
 
-
 class FinanceRecord:
     def __init__(self, id: int, amount: float, category: str, date: str, description: str):
         self.id = id
@@ -345,7 +344,124 @@ class FinanceRecord:
 
     @staticmethod
     def menu():
-        pass
+        """Меню управления финансовыми записями"""
+        while True:
+            print(textwrap.dedent("""
+                \nУправление финансовыми записями:
+                1. Добавить запись
+                2. Просмотреть записи
+                3. Сгенерировать отчёт
+                4. Импорт записей из CSV
+                5. Экспорт записей в CSV
+                6. Назад
+            """))
+            choice = input("Введите номер действия: ").strip()
+
+            if choice == "1":
+                try:
+                    amount = float(input("Введите сумму (доход положительный, расход отрицательный): "))
+                    category = input("Введите категорию: ").strip()
+                    date = input("Введите дату (ДД-ММ-ГГГГ): ").strip()
+                    description = input("Введите описание: ").strip()
+                    FinanceRecord.add_record(amount, category, date, description)
+                except ValueError:
+                    print("Ошибка ввода суммы. Попробуйте снова.")
+            elif choice == "2":
+                filter_date = input("Фильтр по дате (ДД-ММ-ГГГГ) или Enter для всех: ").strip()
+                filter_category = input("Фильтр по категории или Enter для всех: ").strip()
+                FinanceRecord.view_records(filter_date or None, filter_category or None)
+            elif choice == "3":
+                start_date = input("Начальная дата (ДД-ММ-ГГГГ): ").strip()
+                end_date = input("Конечная дата (ДД-ММ-ГГГГ): ").strip()
+                FinanceRecord.generate_report(start_date, end_date)
+            elif choice == "4":
+                filename = input("Введите имя файла для импорта: ").strip()
+                FinanceRecord.import_records_from_csv(filename)
+            elif choice == "5":
+                filename = input("Введите имя файла для экспорта: ").strip()
+                FinanceRecord.export_records_to_csv(filename)
+            elif choice == "6":
+                break
+            else:
+                print("Неверный выбор, попробуйте снова.")
+
+    @staticmethod
+    def load_records():
+        """Загружает записи из JSON-файла."""
+        try:
+            with open("finance_records.json", "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            return []
+
+    @staticmethod
+    def save_records(records):
+        """Сохраняет записи в JSON-файл."""
+        with open("finance_records.json", "w") as file:
+            json.dump(records, file, indent=4)
+
+    @staticmethod
+    def add_record(amount, category, date, description):
+        """Добавляет новую запись."""
+        records = FinanceRecord.load_records()
+        new_id = len(records) + 1
+        record = FinanceRecord(new_id, amount, category, date, description)
+        records.append(record.__dict__)
+        FinanceRecord.save_records(records)
+
+    @staticmethod
+    def view_records(filter_date=None, filter_category=None):
+        """Просмотр записей с фильтрацией."""
+        records = FinanceRecord.load_records()
+        if filter_date:
+            records = [r for r in records if r["date"] == filter_date]
+        if filter_category:
+            records = [r for r in records if r["category"] == filter_category]
+        
+        for record in records:
+            print(f"ID: {record['id']}, Сумма: {record['amount']}, Категория: {record['category']}, "
+                  f"Дата: {record['date']}, Описание: {record['description']}")
+
+    @staticmethod
+    def generate_report(start_date, end_date):
+        """Генерация отчёта за период."""
+        records = FinanceRecord.load_records()
+        start_date = datetime.strptime(start_date, "%d-%m-%Y")
+        end_date = datetime.strptime(end_date, "%d-%m-%Y")
+        
+        filtered_records = [
+            r for r in records 
+            if start_date <= datetime.strptime(r["date"], "%d-%m-%Y") <= end_date
+        ]
+        total_income = sum(r["amount"] for r in filtered_records if r["amount"] > 0)
+        total_expense = sum(r["amount"] for r in filtered_records if r["amount"] < 0)
+
+        print(f"Отчёт с {start_date.strftime('%d-%m-%Y')} по {end_date.strftime('%d-%m-%Y')}")
+        print(f"Доход: {total_income}")
+        print(f"Расход: {abs(total_expense)}")
+        print(f"Баланс: {total_income + total_expense}")
+
+    @staticmethod
+    def import_records_from_csv(filename):
+        """Импорт записей из CSV."""
+        records = FinanceRecord.load_records()
+        with open(filename, "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                new_record = FinanceRecord(
+                    int(row["id"]), float(row["amount"]), row["category"], row["date"], row["description"]
+                )
+                records.append(new_record.__dict__)
+        FinanceRecord.save_records(records)
+
+    @staticmethod
+    def export_records_to_csv(filename):
+        """Экспорт записей в CSV."""
+        records = FinanceRecord.load_records()
+        with open(filename, "w", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=["id", "amount", "category", "date", "description"])
+            writer.writeheader()
+            writer.writerows(records)
 
 
 class CSVHandler:
